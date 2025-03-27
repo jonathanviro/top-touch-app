@@ -1,188 +1,231 @@
-// ConfigScreen.tsx
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { GAME_CONFIG } from "../utils/game-config";
-
-type GameConfig = typeof GAME_CONFIG;
+import ConfigItem from "../components/ConfigItem";
+import DaisyModal from "../components/DaisyModal";
 
 const ConfigScreen = () => {
+  const navigate = useNavigate();
+
   const [config, setConfig] = useState(() => {
     const saved = localStorage.getItem("game_config");
     return saved ? JSON.parse(saved) : GAME_CONFIG;
   });
 
-  const handleChange = (
-    section: keyof GameConfig,
-    key: string,
-    value: number
-  ) => {
-    setConfig((prev: GameConfig) => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [key]: value,
-      },
-    }));
+  // Modal tipo "alert" (mensaje + OK)
+  const [modalInfo, setModalInfo] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+
+  // Modal tipo "confirm" (mensaje + Aceptar/Cancelar)
+  const [modalConfirm, setModalConfirm] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm?: () => void; // la acción que se corre si aceptan
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+
+  // Funciones para abrir/cerrar modales
+  const showInfoModal = (title: string, message: string) => {
+    setModalInfo({ isOpen: true, title, message });
+  };
+  const closeInfoModal = () => {
+    setModalInfo({ ...modalInfo, isOpen: false });
   };
 
-  useEffect(() => {
-    localStorage.setItem("game_config", JSON.stringify(config));
-  }, [config]);
+  const showConfirmModal = (
+    title: string,
+    message: string,
+    onConfirm: () => void
+  ) => {
+    setModalConfirm({ isOpen: true, title, message, onConfirm });
+  };
+  const closeConfirmModal = () => {
+    setModalConfirm({ ...modalConfirm, isOpen: false });
+  };
+
+  // =====================
+  // Manejo de la config
+  // =====================
+  const handleChange = (key: string, value: number) => {
+    // Ejemplo de validaciones
+    if (value <= 0) {
+      showInfoModal(
+        "Valor inválido",
+        "Los valores deben ser mayores que cero."
+      );
+      return;
+    }
+    if (key === "goalLoser" && value >= config.goalPartialWinner) {
+      showInfoModal(
+        "Valor inválido",
+        "‘Toques mínimo para perder’ no puede ser mayor o igual a ‘Toques mínimo para ganar’."
+      );
+      return;
+    }
+    if (key === "goalPartialWinner" && value <= config.goalLoser) {
+      showInfoModal(
+        "Valor inválido",
+        "‘Toques mínimo para ganar’ no puede ser menor o igual que ‘Toques mínimo para perder’."
+      );
+      return;
+    }
+
+    setConfig({ ...config, [key]: value });
+  };
+
+  const handleGuardar = () => {
+    // Validar algo adicional
+    if (config.goalPartialWinner <= config.goalLoser) {
+      showInfoModal(
+        "Error",
+        "Verifica los valores de perder/ganar antes de guardar."
+      );
+      return;
+    }
+
+    // Antes: const confirmar = window.confirm(...);
+    // Ahora:
+    showConfirmModal(
+      "Guardar Configuración",
+      "¿Deseas guardar los cambios?",
+      () => {
+        // onConfirm
+        localStorage.setItem("game_config", JSON.stringify(config));
+        closeConfirmModal();
+        showInfoModal("Éxito", "¡Configuración guardada!");
+        setTimeout(() => {
+          navigate("/home");
+        }, 2000);
+      }
+    );
+  };
+
+  const handleCancelar = () => {
+    // Antes: window.confirm
+    showConfirmModal(
+      "Descartar Cambios",
+      "¿Deseas descartar los cambios?",
+      () => {
+        const saved = localStorage.getItem("game_config");
+        setConfig(saved ? JSON.parse(saved) : GAME_CONFIG);
+        closeConfirmModal();
+        showInfoModal(
+          "Cambios descartados",
+          "Volviste a la configuración anterior."
+        );
+      }
+    );
+  };
+
+  const handleRestablecer = () => {
+    showConfirmModal(
+      "Restablecer Configuración",
+      "¿Deseas restablecer la configuración a los valores originales?",
+      () => {
+        setConfig(GAME_CONFIG);
+        localStorage.removeItem("game_config");
+        closeConfirmModal();
+        showInfoModal(
+          "Restablecido",
+          "La configuración se ha restablecido a los valores originales."
+        );
+        setTimeout(() => {
+          navigate("/home");
+        }, 2000);
+      }
+    );
+  };
+
+  const configFields = [
+    { label: "Duración del juego (s)", key: "gameDuration", isVisible: true },
+    {
+      label: "Tiempo visibilidad (ms)",
+      key: "characterLifetime",
+      isVisible: false,
+    },
+    {
+      label: "Intervalo aparición (ms)",
+      key: "spawnInterval",
+      isVisible: false,
+    },
+    { label: "Máx. personajes por ciclo", key: "maxPerCycle", isVisible: true },
+    {
+      label: "Delay animación salida (ms)",
+      key: "destroyDelay",
+      isVisible: false,
+    },
+    { label: "Toques mínimo para perder", key: "goalLoser", isVisible: true },
+    {
+      label: "Toques mínimo para ganar parcialmente",
+      key: "goalPartialWinner",
+      isVisible: true,
+    },
+    { label: "Filas (rows)", key: "rows", isVisible: false },
+    { label: "Columnas (columns)", key: "columns", isVisible: false },
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-base-200 p-6">
-      <h2 className="text-3xl font-bold mb-8">Configuración del Juego</h2>
+    <div
+      data-theme="light"
+      className="min-h-screen bg-[#fdf6e3] flex items-center justify-center px-6"
+    >
+      <div className="w-full max-w-5xl mx-auto">
+        <h2 className="text-4xl font-bold mb-10 text-gray-800 text-center">
+          Configuración del Juego
+        </h2>
 
-      <div className="overflow-x-auto w-full max-w-3xl bg-white shadow-xl rounded-xl p-6">
-        <table className="table w-full">
-          <tbody>
-            {/* Duración del juego */}
-            <tr>
-              <td className="font-semibold">Duración del juego (s)</td>
-              <td>
-                <input
-                  type="number"
-                  className="input input-bordered w-full"
-                  value={config.timing.gameDuration}
-                  onChange={(e) =>
-                    handleChange(
-                      "timing",
-                      "gameDuration",
-                      Number(e.target.value)
-                    )
-                  }
-                />
-              </td>
-            </tr>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {configFields.map(({ label, key, isVisible }) => (
+            <ConfigItem
+              key={key}
+              label={label}
+              isVisible={isVisible}
+              value={config[key]}
+              onChange={(val) => handleChange(key, val)}
+            />
+          ))}
+        </div>
 
-            {/* Tiempo de visibilidad */}
-            <tr>
-              <td className="font-semibold">Tiempo visibilidad (ms)</td>
-              <td>
-                <input
-                  type="number"
-                  className="input input-bordered w-full"
-                  value={config.timing.characterLifetime}
-                  onChange={(e) =>
-                    handleChange(
-                      "timing",
-                      "characterLifetime",
-                      Number(e.target.value)
-                    )
-                  }
-                />
-              </td>
-            </tr>
-
-            {/* Intervalo de aparición */}
-            <tr>
-              <td className="font-semibold">Intervalo aparición (ms)</td>
-              <td>
-                <input
-                  type="number"
-                  className="input input-bordered w-full"
-                  value={config.timing.spawnInterval}
-                  onChange={(e) =>
-                    handleChange(
-                      "timing",
-                      "spawnInterval",
-                      Number(e.target.value)
-                    )
-                  }
-                />
-              </td>
-            </tr>
-
-            {/* Máximo por ciclo */}
-            <tr>
-              <td className="font-semibold">Máx. personajes por ciclo</td>
-              <td>
-                <input
-                  type="number"
-                  className="input input-bordered w-full"
-                  value={config.timing.maxPerCycle}
-                  onChange={(e) =>
-                    handleChange(
-                      "timing",
-                      "maxPerCycle",
-                      Number(e.target.value)
-                    )
-                  }
-                />
-              </td>
-            </tr>
-
-            {/* Delay animación */}
-            <tr>
-              <td className="font-semibold">Delay animación salida (ms)</td>
-              <td>
-                <input
-                  type="number"
-                  className="input input-bordered w-full"
-                  value={config.timing.destroyDelay}
-                  onChange={(e) =>
-                    handleChange(
-                      "timing",
-                      "destroyDelay",
-                      Number(e.target.value)
-                    )
-                  }
-                />
-              </td>
-            </tr>
-
-            {/* Reglas de resultado */}
-            <tr>
-              <td className="font-semibold">Toques mínimo para perder</td>
-              <td>
-                <input
-                  type="number"
-                  className="input input-bordered w-full"
-                  value={config.results.goalLoser}
-                  onChange={(e) =>
-                    handleChange("results", "goalLoser", Number(e.target.value))
-                  }
-                />
-              </td>
-            </tr>
-
-            <tr>
-              <td className="font-semibold">Toques para parcial</td>
-              <td>
-                <input
-                  type="number"
-                  className="input input-bordered w-full"
-                  value={config.results.goalPartialWinner}
-                  onChange={(e) =>
-                    handleChange(
-                      "results",
-                      "goalPartialWinner",
-                      Number(e.target.value)
-                    )
-                  }
-                />
-              </td>
-            </tr>
-
-            <tr>
-              <td className="font-semibold">Toques para ganar</td>
-              <td>
-                <input
-                  type="number"
-                  className="input input-bordered w-full"
-                  value={config.results.goalWinner}
-                  onChange={(e) =>
-                    handleChange(
-                      "results",
-                      "goalWinner",
-                      Number(e.target.value)
-                    )
-                  }
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div className="mt-8 flex flex-wrap gap-4 justify-center">
+          <button className="btn btn-error btn-outline" onClick={handleGuardar}>
+            Guardar
+          </button>
+          <button
+            className="btn btn-error btn-outline"
+            onClick={handleRestablecer}
+          >
+            Restablecer
+          </button>
+          <button className="btn btn-success" onClick={handleCancelar}>
+            Cancelar
+          </button>
+        </div>
       </div>
+
+      <DaisyModal
+        isOpen={modalInfo.isOpen}
+        title={modalInfo.title}
+        message={modalInfo.message}
+        onClose={closeInfoModal}
+      />
+
+      <DaisyModal
+        isOpen={modalConfirm.isOpen}
+        title={modalConfirm.title}
+        message={modalConfirm.message}
+        // Si onConfirm existe, se muestran los dos botones
+        onConfirm={modalConfirm.onConfirm}
+        onClose={closeConfirmModal}
+        confirmText="Sí"
+        cancelText="No"
+      />
     </div>
   );
 };

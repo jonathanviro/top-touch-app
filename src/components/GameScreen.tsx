@@ -25,10 +25,13 @@ const characters = [
 ];
 
 const GameScreen = () => {
-  const navigate = useNavigate();
-  const gridSize = GAME_CONFIG.grid.columns * GAME_CONFIG.grid.rows;
+  const savedConfig = localStorage.getItem("game_config");
+  const CURRENT_CONFIG = savedConfig ? JSON.parse(savedConfig) : GAME_CONFIG;
 
-  const [timeLeft, setTimeLeft] = useState(GAME_CONFIG.timing.gameDuration);
+  const navigate = useNavigate();
+  const gridSize = CURRENT_CONFIG.columns * CURRENT_CONFIG.rows;
+
+  const [timeLeft, setTimeLeft] = useState(CURRENT_CONFIG.gameDuration);
   const [score, setScore] = useState(0);
   const [activeCharacters, setActiveCharacters] = useState<(number | null)[]>(
     new Array(gridSize).fill(null)
@@ -49,7 +52,11 @@ const GameScreen = () => {
   // Temporizador principal
   useEffect(() => {
     if (timeLeft > 0) {
-      const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+      const timer = setInterval(
+        () => setTimeLeft((prev: number) => prev - 1),
+        1000
+      );
+
       return () => clearInterval(timer);
     } else {
       // navigate("/result", { state: { score } });
@@ -59,10 +66,10 @@ const GameScreen = () => {
   // Cuando se acabe el tiempo. Determinar el resultado
   useEffect(() => {
     if (timeLeft <= 0) {
-      if (score <= GAME_CONFIG.results.goalLoser) {
+      if (score <= CURRENT_CONFIG.goalLoser) {
         setResultType("loser");
         // audioRef.src = loserAudio;
-      } else if (score <= GAME_CONFIG.results.goalPartialWinner) {
+      } else if (score <= CURRENT_CONFIG.goalPartialWinner) {
         setResultType("partial-winner");
         // audioRef.src = partialAudio;
       } else {
@@ -86,7 +93,7 @@ const GameScreen = () => {
 
     if (availablePositions.length > 0) {
       const interval = setInterval(() => {
-        if (generated < GAME_CONFIG.timing.maxPerCycle) {
+        if (generated < CURRENT_CONFIG.maxPerCycle) {
           const newPosition =
             availablePositions[
               Math.floor(Math.random() * availablePositions.length)
@@ -118,8 +125,8 @@ const GameScreen = () => {
                     prev.filter((pos) => pos !== newPosition)
                   );
                   delete timeouts.current[newPosition];
-                }, GAME_CONFIG.timing.destroyDelay);
-              }, GAME_CONFIG.timing.characterLifetime);
+                }, CURRENT_CONFIG.destroyDelay);
+              }, CURRENT_CONFIG.characterLifetime);
             }
             return updated;
           });
@@ -128,7 +135,7 @@ const GameScreen = () => {
         } else {
           clearInterval(interval);
         }
-      }, GAME_CONFIG.timing.spawnInterval);
+      }, CURRENT_CONFIG.spawnInterval);
 
       return () => clearInterval(interval);
     }
@@ -153,7 +160,7 @@ const GameScreen = () => {
         return updated;
       });
       setClickDestroyingIndexes((prev) => prev.filter((pos) => pos !== index));
-    }, GAME_CONFIG.timing.destroyDelay);
+    }, CURRENT_CONFIG.destroyDelay);
   };
 
   return (
@@ -172,8 +179,8 @@ const GameScreen = () => {
       <div
         className={`grid gap-20 mt-72 bg-blue-400/10 rounded-[60px] p-8`}
         style={{
-          gridTemplateColumns: `repeat(${GAME_CONFIG.grid.columns}, 1fr)`,
-          gridTemplateRows: `repeat(${GAME_CONFIG.grid.rows}, 1fr)`,
+          gridTemplateColumns: `repeat(${CURRENT_CONFIG.columns}, 1fr)`,
+          gridTemplateRows: `repeat(${CURRENT_CONFIG.rows}, 1fr)`,
         }}
       >
         {activeCharacters.map((charIndex, index) => (

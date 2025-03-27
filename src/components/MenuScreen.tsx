@@ -19,7 +19,7 @@ const MenuScreen = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 to-purple-100 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-[#fdf6e3] p-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         {menuOptions.map(({ title, icon, route }) => (
           <MenuCard

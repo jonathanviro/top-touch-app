@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import invoiceBg from "../assets/backgrounds/invoice-bg.png";
 import keyboardInvoiceBg from "../assets/backgrounds/keyboard-invoice-bg.png";
@@ -16,17 +16,54 @@ import playBtn from "../assets/buttons/play-btn.png";
 
 const InvoiceScreen = () => {
   const navigate = useNavigate();
+
+  // --- Estado para la factura ---
   const [invoice, setInvoice] = useState<string[]>(Array(12).fill(""));
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
-  // Manejar clics en el teclado
-  const handleKeyPress = (value: string) => {
-    let index = invoice.findIndex((val) => val === "");
+  // --- Lógica de 10 toques en el contenedor ---
+  const [touchCount, setTouchCount] = useState(0);
 
+  // --- Lógica de inactividad con setTimeout de 60s ---
+  // Usamos useRef<number | null>, pues en navegador setTimeout devuelve un número
+  const inactivityTimeoutId = useRef<number | null>(null);
+
+  // Función para reiniciar el temporizador de inactividad
+  const resetInactivityTimer = () => {
+    // Si existe un timeout previo, lo limpiamos
+    if (inactivityTimeoutId.current !== null) {
+      window.clearTimeout(inactivityTimeoutId.current);
+    }
+    // Iniciamos un nuevo timeout de 60s
+    inactivityTimeoutId.current = window.setTimeout(() => {
+      // Si pasa 1 min sin interacción, regresamos a home
+      navigate("/home");
+    }, 4000) as unknown as number; // forzamos a number si TypeScript se queja
+  };
+
+  // Al montar, inicia el timeout; al desmontar, limpiar
+  useEffect(() => {
+    resetInactivityTimer();
+    return () => {
+      if (inactivityTimeoutId.current !== null) {
+        window.clearTimeout(inactivityTimeoutId.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Manejar clics en el teclado
+  const handleKeyPress = (
+    value: string,
+    e: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    e.stopPropagation(); // Evita que cuente para el contenedor
+    resetInactivityTimer(); // Usuario interactuó, reiniciamos inactividad
+
+    let index = invoice.findIndex((val) => val === "");
     if (index === -1 && activeIndex !== null) {
       index = activeIndex;
     }
-
     if (index !== -1) {
       const newInvoice = [...invoice];
       newInvoice[index] = value;
@@ -39,16 +76,34 @@ const InvoiceScreen = () => {
   };
 
   // Seleccionar casilla manualmente
-  const handleSelectBox = (index: number) => {
+  const handleSelectBox = (
+    index: number,
+    e: React.MouseEvent<HTMLDivElement>
+  ) => {
+    e.stopPropagation(); // No contarlo como clic en contenedor
+    resetInactivityTimer(); // Reiniciamos inactividad
     setActiveIndex(index);
   };
 
-  // Habilitar el botón solo si todas las casillas están llenas
+  // Botón de jugar
   const isComplete = invoice.every((value) => value !== "");
-
-  const handlePlay = () => {
+  const handlePlay = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    resetInactivityTimer();
     if (isComplete) {
       navigate("/game");
+    }
+  };
+
+  // Clic en el contenedor principal -> 10 toques + reinicio inactividad
+  const handleContainerClick = () => {
+    resetInactivityTimer();
+
+    const newCount = touchCount + 1;
+    if (newCount >= 10) {
+      navigate("/home");
+    } else {
+      setTouchCount(newCount);
     }
   };
 
@@ -56,16 +111,16 @@ const InvoiceScreen = () => {
     <div
       className="w-screen h-screen bg-cover bg-center flex flex-col items-center justify-center"
       style={{ backgroundImage: `url(${invoiceBg})` }}
+      onClick={handleContainerClick}
     >
-      {/* Texto superior */}
       <div className="text-white text-4xl font-bold mb-6">Ingrese Factura:</div>
 
-      {/* Casillas de factura */}
+      {/* Casillas */}
       <div className="flex gap-3 mb-8">
         {invoice.map((value, index) => (
           <div
             key={index}
-            onClick={() => handleSelectBox(index)}
+            onClick={(e) => handleSelectBox(index, e)}
             className={`w-16 h-16 border-4 ${
               index === activeIndex ? "border-yellow-400" : "border-white"
             } text-white flex items-center justify-center text-3xl cursor-pointer`}
@@ -75,35 +130,36 @@ const InvoiceScreen = () => {
         ))}
       </div>
 
-      {/* Fondo del teclado (ajustado para que no se recorte) */}
+      {/* Fondo del teclado */}
       <div
         className="relative flex justify-center mt-25 mb-25"
         style={{
           backgroundImage: `url(${keyboardInvoiceBg})`,
-          backgroundSize: "contain", // ← Cambié de "cover" a "contain"
+          backgroundSize: "contain",
           backgroundRepeat: "no-repeat",
-          width: "500px", // Tamaño amplio para acomodar todos los botones
-          height: "580px", // Altura aumentada para mejor alineación
+          width: "500px",
+          height: "580px",
         }}
+        onClick={(e) => e.stopPropagation()} // No contamos clics en el fondo del teclado
       >
         {/* Teclado */}
         <div className="grid grid-cols-3 gap-5 absolute top-6">
-          {/* Primera fila */}
-          <button onClick={() => handleKeyPress("1")}>
+          {/* Fila 1 */}
+          <button onClick={(e) => handleKeyPress("1", e)}>
             <img
               src={oneBtn}
               alt="1"
               className="w-[120px] h-[120px] cursor-pointer hover:scale-110 transition-transform"
             />
           </button>
-          <button onClick={() => handleKeyPress("2")}>
+          <button onClick={(e) => handleKeyPress("2", e)}>
             <img
               src={twoBtn}
               alt="2"
               className="w-[120px] h-[120px] cursor-pointer hover:scale-110 transition-transform"
             />
           </button>
-          <button onClick={() => handleKeyPress("3")}>
+          <button onClick={(e) => handleKeyPress("3", e)}>
             <img
               src={threeBtn}
               alt="3"
@@ -111,22 +167,22 @@ const InvoiceScreen = () => {
             />
           </button>
 
-          {/* Segunda fila */}
-          <button onClick={() => handleKeyPress("4")}>
+          {/* Fila 2 */}
+          <button onClick={(e) => handleKeyPress("4", e)}>
             <img
               src={fourBtn}
               alt="4"
               className="w-[120px] h-[120px] cursor-pointer hover:scale-110 transition-transform"
             />
           </button>
-          <button onClick={() => handleKeyPress("5")}>
+          <button onClick={(e) => handleKeyPress("5", e)}>
             <img
               src={fiveBtn}
               alt="5"
               className="w-[120px] h-[120px] cursor-pointer hover:scale-110 transition-transform"
             />
           </button>
-          <button onClick={() => handleKeyPress("6")}>
+          <button onClick={(e) => handleKeyPress("6", e)}>
             <img
               src={sixBtn}
               alt="6"
@@ -134,22 +190,22 @@ const InvoiceScreen = () => {
             />
           </button>
 
-          {/* Tercera fila */}
-          <button onClick={() => handleKeyPress("7")}>
+          {/* Fila 3 */}
+          <button onClick={(e) => handleKeyPress("7", e)}>
             <img
               src={sevenBtn}
               alt="7"
               className="w-[120px] h-[120px] cursor-pointer hover:scale-110 transition-transform"
             />
           </button>
-          <button onClick={() => handleKeyPress("8")}>
+          <button onClick={(e) => handleKeyPress("8", e)}>
             <img
               src={eightBtn}
               alt="8"
               className="w-[120px] h-[120px] cursor-pointer hover:scale-110 transition-transform"
             />
           </button>
-          <button onClick={() => handleKeyPress("9")}>
+          <button onClick={(e) => handleKeyPress("9", e)}>
             <img
               src={nineBtn}
               alt="9"
@@ -157,9 +213,8 @@ const InvoiceScreen = () => {
             />
           </button>
 
-          {/* Cero alineado al centro */}
           <div></div>
-          <button onClick={() => handleKeyPress("0")}>
+          <button onClick={(e) => handleKeyPress("0", e)}>
             <img
               src={ceroBtn}
               alt="0"
