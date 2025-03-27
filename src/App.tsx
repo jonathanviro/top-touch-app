@@ -1,17 +1,19 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import StartScreen from "./components/StartScreen";
+import MenuScreen from "./components/MenuScreen";
+import HomeScreen from "./components/HomeScreen";
 import InvoiceScreen from "./components/InvoiceScreen";
 import GameScreen from "./components/GameScreen";
-import ScoreScreen from "./components/ScoreScreen";
+import ConfigScreen from "./components/ConfigScreen";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<StartScreen />} />
+        <Route path="/" element={<MenuScreen />} />
+        <Route path="/home" element={<HomeScreen />}></Route>
         <Route path="/invoice" element={<InvoiceScreen />} />
         <Route path="/game" element={<GameScreen />} />
-        <Route path="/score" element={<ScoreScreen />} />
+        <Route path="/config" element={<ConfigScreen />} />
       </Routes>
     </BrowserRouter>
   );

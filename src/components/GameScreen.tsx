@@ -210,7 +210,7 @@ const GameScreen = () => {
           resultType={resultType} // "winner", "partial-winner", "loser"
           onClose={() => {
             setShowResult(false);
-            navigate("/", { state: { score } });
+            navigate("/home", { state: { score } });
           }}
         />
       )}
