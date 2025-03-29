@@ -12,6 +12,7 @@ import characterFiveBg from "../assets/characters/5-chara.png";
 import characterSixBg from "../assets/characters/6-chara.png";
 import characterSevenBg from "../assets/characters/7-chara.png";
 import characterEightBg from "../assets/characters/8-chara.png";
+import gameBgAudio from "../assets/audio/soundtrack-bg.mp3";
 
 const characters = [
   characterOneBg,
@@ -45,18 +46,16 @@ const GameScreen = () => {
   type ResultType = "winner" | "partial-winner" | "loser";
   const [resultType, setResultType] = useState<ResultType>("partial-winner");
 
-  const [audioRef] = useState(new Audio());
+  const audioRef = useRef(new Audio(gameBgAudio));
 
   const timeouts = useRef<{ [key: number]: number }>({});
 
   // Temporizador principal
   useEffect(() => {
     if (timeLeft > 0) {
-      const timer = setInterval(
-        () => setTimeLeft((prev: number) => prev - 1),
-        1000
-      );
-
+      const timer = setInterval(() => {
+        setTimeLeft((prev: number) => prev - 1);
+      }, 1000);
       return () => clearInterval(timer);
     } else {
       // navigate("/result", { state: { score } });
@@ -66,21 +65,29 @@ const GameScreen = () => {
   // Cuando se acabe el tiempo. Determinar el resultado
   useEffect(() => {
     if (timeLeft <= 0) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+
       if (score <= CURRENT_CONFIG.goalLoser) {
         setResultType("loser");
-        // audioRef.src = loserAudio;
       } else if (score <= CURRENT_CONFIG.goalPartialWinner) {
         setResultType("partial-winner");
-        // audioRef.src = partialAudio;
       } else {
         setResultType("winner");
-        // audioRef.src = winnerAudio;
       }
 
       setShowResult(true);
-      audioRef.play();
     }
   }, [timeLeft]);
+
+  useEffect(() => {
+    audioRef.current.play();
+
+    return () => {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    };
+  }, []);
 
   // Generación escalonada de personajes
   useEffect(() => {

@@ -5,10 +5,10 @@ import { useWindowSize } from "@react-hook/window-size";
 import winnerImg from "../assets/results/winner.png";
 import partialWinnerImg from "../assets/results/partial-winner.png";
 import loserImg from "../assets/results/loser.png";
-// import winnerAudio from "../assets/audio/winner.mp3";
-// import partialAudio from "../assets/audio/partial.mp3";
-// import loserAudio from "../assets/audio/loser.mp3";
-import homeBtn from "../assets/buttons/home-btn.png"; // ⬅️ botón de home
+import winnerAudio from "../assets/audio/winner.mp3";
+import partialAudio from "../assets/audio/partial-winner.mp3";
+import loserAudio from "../assets/audio/loser.mp3";
+import homeBtn from "../assets/buttons/home-btn.png";
 
 type ResultType = "winner" | "partial-winner" | "loser";
 
@@ -23,7 +23,7 @@ const ResultModal: React.FC<ResultModalProps> = ({
   resultType,
   onClose,
 }) => {
-  // const [audio] = useState(new Audio());
+  const [audio] = useState(new Audio());
   const [showConfetti, setShowConfetti] = useState(false);
   const [width, height] = useWindowSize();
 
@@ -33,20 +33,20 @@ const ResultModal: React.FC<ResultModalProps> = ({
     loser: loserImg,
   };
 
-  // const audios: Record<ResultType, string> = {
-  //   winner: winnerAudio,
-  //   "partial-winner": partialAudio,
-  //   loser: loserAudio,
-  // };
+  const audios: Record<ResultType, string> = {
+    winner: winnerAudio,
+    "partial-winner": partialAudio,
+    loser: loserAudio,
+  };
 
   useEffect(() => {
-    // audio.src = audios[resultType];
-    // audio.play();
+    audio.src = audios[resultType];
+    audio.play();
 
     if (resultType === "winner") setShowConfetti(true);
 
     return () => {
-      // audio.pause();
+      audio.pause();
     };
   }, [resultType]);
 
