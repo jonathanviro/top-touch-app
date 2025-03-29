@@ -12,7 +12,7 @@ const ConfigItem = ({ label, value, onChange, isVisible }: ConfigItemProps) => {
 
   return (
     <div className={`hidden=${isVisible}`}>
-      <label className="block text-gray-700 font-semibold mb-2">{label}</label>
+      <label className="block text-white font-semibold mb-4">{label}</label>
       <input
         type="number"
         className="input input-bordered w-full text-black"

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GAME_CONFIG } from "../utils/game-config";
+import NullexLogo from "../assets/logos/nullex-logo.png";
 import ConfigItem from "../components/ConfigItem";
 import DaisyModal from "../components/DaisyModal";
 
@@ -120,6 +121,9 @@ const ConfigScreen = () => {
           "Cambios descartados",
           "Volviste a la configuración anterior."
         );
+        setTimeout(() => {
+          navigate("/");
+        }, 2000);
       }
     );
   };
@@ -174,10 +178,13 @@ const ConfigScreen = () => {
   return (
     <div
       data-theme="light"
-      className="min-h-screen bg-[#fdf6e3] flex items-center justify-center px-6"
+      className="min-h-screen bg-blue-app flex items-center justify-center px-6"
     >
+      <div className="absolute top-0 w-full flex justify-center mt-40">
+        <img className="w-[250px] h-auto" src={NullexLogo} alt="Logo Nullex" />
+      </div>
       <div className="w-full max-w-5xl mx-auto">
-        <h2 className="text-4xl font-bold mb-10 text-gray-800 text-center">
+        <h2 className="text-4xl font-bold mb-36 text-white text-center">
           Configuración del Juego
         </h2>
 
@@ -193,7 +200,7 @@ const ConfigScreen = () => {
           ))}
         </div>
 
-        <div className="mt-8 flex flex-wrap gap-4 justify-center">
+        <div className="mt-20 flex flex-wrap gap-16 justify-center">
           <button className="btn btn-error btn-outline" onClick={handleGuardar}>
             Guardar
           </button>

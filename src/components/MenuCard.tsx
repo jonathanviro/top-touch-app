@@ -10,10 +10,10 @@ const MenuCard = ({ title, icon: Icon, onClick }: MenuCardProps) => {
   return (
     <div
       onClick={onClick}
-      className="w-64 h-48 rounded-2xl shadow-xl cursor-pointer bg-gradient-to-br from-pink-200 to-purple-300 hover:scale-105 transition-transform flex flex-col items-center justify-center gap-4 text-center"
+      className="w-64 h-48 rounded-2xl shadow-xl cursor-pointer bg-blue-button hover:scale-105 transition-transform flex flex-col items-center justify-center gap-4 text-center"
     >
-      <Icon className="w-12 h-12 text-black" />
-      <span className="text-lg font-semibold text-black">{title}</span>
+      <Icon className="w-12 h-12 text-white " />
+      <span className="text-lg font-semibold text-white">{title}</span>
     </div>
   );
 };

@@ -43,7 +43,7 @@ const ResultModal: React.FC<ResultModalProps> = ({
     // audio.src = audios[resultType];
     // audio.play();
 
-    if (resultType !== "loser") setShowConfetti(true);
+    if (resultType === "winner") setShowConfetti(true);
 
     return () => {
       // audio.pause();

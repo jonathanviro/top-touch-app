@@ -1,6 +1,3 @@
-// DaisyModal.tsx
-import React from "react";
-
 type DaisyModalProps = {
   isOpen: boolean;
   title: string;

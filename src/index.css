@@ -1,5 +1,9 @@
 @import "tailwindcss";
 @plugin "daisyui";
+@theme {
+  --color-blue-app: linear-gradient(to bottom right, #334155, #1e293b, #0f172a);
+  --color-blue-button: linear-gradient(to bottom right, #1dcaff, #0084ff);
+}
 
 html,
 body,
@@ -82,6 +86,18 @@ body,
 }
 
 @layer utilities {
+  .bg-blue-app {
+    background-image: var(--color-blue-app);
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+
+  .bg-blue-button {
+    background-image: var(--color-blue-button);
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+
   .animate-shake {
     animation: shake 0.3s ease-in-out infinite;
   }

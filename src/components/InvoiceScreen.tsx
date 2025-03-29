@@ -38,7 +38,7 @@ const InvoiceScreen = () => {
     inactivityTimeoutId.current = window.setTimeout(() => {
       // Si pasa 1 min sin interacción, regresamos a home
       navigate("/home");
-    }, 4000) as unknown as number; // forzamos a number si TypeScript se queja
+    }, 60000) as unknown as number; // forzamos a number si TypeScript se queja
   };
 
   // Al montar, inicia el timeout; al desmontar, limpiar
