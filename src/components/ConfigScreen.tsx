@@ -150,19 +150,8 @@ const ConfigScreen = () => {
   const configFields = [
     { label: "Duración del juego (s)", key: "gameDuration", isVisible: true },
     {
-      label: "Tiempo visibilidad (ms)",
-      key: "characterLifetime",
-      isVisible: false,
-    },
-    {
       label: "Intervalo aparición (ms)",
       key: "spawnInterval",
-      isVisible: false,
-    },
-    { label: "Máx. personajes por ciclo", key: "maxPerCycle", isVisible: true },
-    {
-      label: "Delay animación salida (ms)",
-      key: "destroyDelay",
       isVisible: false,
     },
     { label: "Toques mínimo para perder", key: "goalLoser", isVisible: true },
@@ -170,6 +159,21 @@ const ConfigScreen = () => {
       label: "Toques mínimo para ganar parcialmente",
       key: "goalPartialWinner",
       isVisible: true,
+    },
+    {
+      label: "Tiempo visibilidad (ms)",
+      key: "characterLifetime",
+      isVisible: false,
+    },
+    {
+      label: "Máx. personajes por ciclo",
+      key: "maxPerCycle",
+      isVisible: false,
+    },
+    {
+      label: "Delay animación salida (ms)",
+      key: "destroyDelay",
+      isVisible: false,
     },
     { label: "Filas (rows)", key: "rows", isVisible: false },
     { label: "Columnas (columns)", key: "columns", isVisible: false },
@@ -188,7 +192,7 @@ const ConfigScreen = () => {
           Configuración del Juego
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
           {configFields.map(({ label, key, isVisible }) => (
             <ConfigItem
               key={key}

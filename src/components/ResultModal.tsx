@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import ReactHowler from "react-howler";
 import Confetti from "react-confetti";
 import { useWindowSize } from "@react-hook/window-size";
 
@@ -23,9 +24,10 @@ const ResultModal: React.FC<ResultModalProps> = ({
   resultType,
   onClose,
 }) => {
-  const [audio] = useState(new Audio());
   const [showConfetti, setShowConfetti] = useState(false);
+  const [playing, setPlaying] = useState(true);
   const [width, height] = useWindowSize();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const images: Record<ResultType, string> = {
     winner: winnerImg,
@@ -40,13 +42,19 @@ const ResultModal: React.FC<ResultModalProps> = ({
   };
 
   useEffect(() => {
-    audio.src = audios[resultType];
-    audio.play();
+    const audio = new Audio(audios[resultType]);
+    audioRef.current = audio;
+
+    audio
+      .play()
+      .catch((err) =>
+        console.warn("Audio interrumpido o bloqueado por el navegador:", err)
+      );
 
     if (resultType === "winner") setShowConfetti(true);
 
     return () => {
-      audio.pause();
+      setPlaying(false);
     };
   }, [resultType]);
 
@@ -71,6 +79,7 @@ const ResultModal: React.FC<ResultModalProps> = ({
           <img src={homeBtn} alt="Home" className="w-26 h-26" />
         </button>
       </div>
+      <ReactHowler src={audios[resultType]} playing={playing} volume={1.0} />
     </div>
   );
 };

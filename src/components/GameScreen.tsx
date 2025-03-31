@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import ReactHowler from "react-howler";
 import ResultModal from "../components/ResultModal";
 
 import { GAME_CONFIG } from "../utils/game-config";
@@ -25,6 +26,8 @@ const characters = [
   characterEightBg,
 ];
 
+type ResultType = "winner" | "partial-winner" | "loser";
+
 const GameScreen = () => {
   const savedConfig = localStorage.getItem("game_config");
   const CURRENT_CONFIG = savedConfig ? JSON.parse(savedConfig) : GAME_CONFIG;
@@ -33,6 +36,7 @@ const GameScreen = () => {
   const gridSize = CURRENT_CONFIG.columns * CURRENT_CONFIG.rows;
 
   const [timeLeft, setTimeLeft] = useState(CURRENT_CONFIG.gameDuration);
+  const [playing, setPlaying] = useState(false);
   const [score, setScore] = useState(0);
   const [activeCharacters, setActiveCharacters] = useState<(number | null)[]>(
     new Array(gridSize).fill(null)
@@ -43,30 +47,31 @@ const GameScreen = () => {
   >([]);
   const [destroyingIndexes, setDestroyingIndexes] = useState<number[]>([]);
   const [showResult, setShowResult] = useState(false);
-  type ResultType = "winner" | "partial-winner" | "loser";
   const [resultType, setResultType] = useState<ResultType>("partial-winner");
 
-  const audioRef = useRef(new Audio(gameBgAudio));
-
   const timeouts = useRef<{ [key: number]: number }>({});
+  const timerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setPlaying(true);
+  }, []);
 
   // Temporizador principal
   useEffect(() => {
     if (timeLeft > 0) {
-      const timer = setInterval(() => {
+      timerRef.current = setInterval(() => {
         setTimeLeft((prev: number) => prev - 1);
       }, 1000);
-      return () => clearInterval(timer);
-    } else {
-      // navigate("/result", { state: { score } });
+      return () => {
+        if (timerRef.current) clearInterval(timerRef.current);
+      };
     }
-  }, [timeLeft, navigate, score]);
+  }, [timeLeft]);
 
-  // Cuando se acabe el tiempo. Determinar el resultado
+  // Determinar resultado
   useEffect(() => {
     if (timeLeft <= 0) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+      setPlaying(false);
 
       if (score <= CURRENT_CONFIG.goalLoser) {
         setResultType("loser");
@@ -78,16 +83,7 @@ const GameScreen = () => {
 
       setShowResult(true);
     }
-  }, [timeLeft]);
-
-  useEffect(() => {
-    audioRef.current.play();
-
-    return () => {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    };
-  }, []);
+  }, [timeLeft, score]);
 
   // Generación escalonada de personajes
   useEffect(() => {
@@ -146,11 +142,11 @@ const GameScreen = () => {
 
       return () => clearInterval(interval);
     }
-  }, [activeCharacters]);
+  }, [activeCharacters, showResult]);
 
-  // 🚀 Cuando se toca un personaje
+  // Manejo mejorado de clicks
   const handleCharacterClick = (index: number) => {
-    if (showResult) return;
+    if (showResult || activeCharacters[index] === null) return;
 
     setScore((prev) => prev + 1);
 
@@ -159,7 +155,11 @@ const GameScreen = () => {
       delete timeouts.current[index];
     }
 
-    setClickDestroyingIndexes((prev) => [...prev, index]);
+    setClickDestroyingIndexes((prev) => {
+      if (!prev.includes(index)) return [...prev, index];
+      return prev;
+    });
+
     setTimeout(() => {
       setActiveCharacters((prev) => {
         const updated = [...prev];
@@ -228,6 +228,13 @@ const GameScreen = () => {
           }}
         />
       )}
+
+      <ReactHowler
+        src={gameBgAudio}
+        playing={playing}
+        loop={true}
+        volume={1.0}
+      />
     </div>
   );
 };

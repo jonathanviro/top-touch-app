@@ -9,10 +9,10 @@ const StartScreen = () => {
 
   // Maneja el clic en toda la pantalla
   const handleScreenClick = () => {
-    console.log(touchCount);
     setTouchCount((prev) => {
       const next = prev + 1;
-      if (next >= 10) {
+      if (next === 10) {
+        console.log(touchCount);
         // Cuando llega a 10 toques, vamos al menú ("/")
         navigate("/");
       }

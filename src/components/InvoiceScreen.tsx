@@ -100,7 +100,7 @@ const InvoiceScreen = () => {
     resetInactivityTimer();
 
     const newCount = touchCount + 1;
-    if (newCount >= 10) {
+    if (newCount === 10) {
       navigate("/home");
     } else {
       setTouchCount(newCount);
